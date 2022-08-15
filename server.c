@@ -27,13 +27,13 @@ static void	action(int signal, siginfo_t *info, void *context)
 	if (++i == 8)
 	{
 		i = 0;
-		if (!c)
+		if (!c) //if nothing has been received send the confirmation back to client, set the pid to 0 and return
 		{
 			kill(client_pid, SIGUSR2);
 			client_pid = 0;
 			return ;
 		}
-		ft_putchar_fd(c, 1);
+		ft_putchar_fd(c, 1); //else print whatever is in "c", set C to 0 and signal to client that the process has been complete
 		c = 0;
 		kill(client_pid, SIGUSR1);
 	}
