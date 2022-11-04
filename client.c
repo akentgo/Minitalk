@@ -15,10 +15,14 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+//Para el minitalk necesitas conocimientos sobre señales, vas a usar 2 tipos de señal SIGUSR1 y SIGUSR2, estas son señales que enviamos los usuarios manualmente
+
 static void	action(int sig)
 {
+	//Esta funcion recibe una señal y confirma que es correcta antes de enviarla
 	static int received = 0;
 
+	//Este primer if comprueba que la señal que enviamos SIGUSR1 coincide con el argumento del programa en el caso de que no funcione lanzamos el handler de errores
 	if (sig == SIGUSR1) //if the signal is correct, receive = 1
 		++received;
 	else //else error handler
@@ -28,7 +32,7 @@ static void	action(int sig)
 		exit(0);
 	}
 }
-
+//esta funcion es la encargada de, una vez comprobada la SIGUSR1 la enviemos a server
 static void	send_signals(int pid, char *str)
 {
 	int		i;
@@ -40,14 +44,16 @@ static void	send_signals(int pid, char *str)
 		c = *str++;
 		while (i--) //send bit by bit
 		{
-			if (c >> i & 1)
-				kill(pid, SIGUSR2);//send user signal 2 to said pid
+			if (c >> i & 1) //Utilizamos operadores logicos (miratelo en internet, w3schools lo explica guay) para comprobar que lo enviado es correcto
+				kill(pid, SIGUSR2);/*kill, es una funcion que no significa matar AJAJA, significa enviar señal, el primer argumento es el PID o process ID que
+				este PID lo sacamos cuando ejecutamos server, entonces esta linea, coge el pid de server y le envia la señal SIGUSR2 que es un 1	
+			*/
 			else
-				kill(pid, SIGUSR1);//send user signal 1 to said pid
-			usleep(100); //wait 100ms per bit sent
+				kill(pid, SIGUSR1);//Esta linea envia a PID SIGUSR1 que es un 0
+			usleep(100); //la funcion usleep para la ejecucion del programa una cantidad de milisegundos, más especificamente, lo que hay dentro del parentesis
 		}
 	}
-	i = 8;
+	i = 8; //recuerda hay 8 bits en un byte
 	while (i--)
 	{
 		kill(pid, SIGUSR1);
@@ -57,16 +63,17 @@ static void	send_signals(int pid, char *str)
 
 int	main(int argc, char **argv)
 {
-	if (argc != 3 || !ft_strlen(argv[2]))//if arguments are incorrect or the argument length is invalid return 1
+	if (argc != 3 || !ft_strlen(argv[2]))//Si los argumentos no son válidos o hay más de 3 argumentos sal del programa
 		return (1);
-	ft_putstr_fd("Sent	:", 1);
+	ft_putstr_fd("Sent	:", 1); //esto es unb printf basicamente y la siguiente linea tb
 	ft_putnbr_fd(ft_strlen(argv[2]), 1);
 	ft_putchar_fd('\n', 1);
 	ft_putstr_fd("Received: ", 1);
-	signal(SIGUSR1, action);
-	signal(SIGUSR2, action);
-	send_signals(ft_atoi(argv[1]), argv[2]);
+	//sube a la funcion action
+	signal(SIGUSR1, action);//comprobamos sigusr1
+	signal(SIGUSR2, action);//comprobamos sigusr2
+	send_signals(ft_atoi(argv[1]), argv[2]); //enviamos señales
 	while(1)
-		pause();
+		pause();//esperamos a el siguiente comando
 	return (0);
 }
